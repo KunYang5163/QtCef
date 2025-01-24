@@ -59,11 +59,11 @@ int QtCef::Initialize()
     //  cefSettings.chrome_runtime = true;
     //}
 
-    const QString currentLocale = QLocale().name().replace('_', '-');
-    const QString languageList = QString(currentLocale + "," + QLocale().bcp47Name() + ",en-US,en").replace('_', '-');
+    // const QString currentLocale = QLocale().name().replace('_', '-');
+    // const QString languageList = QString(currentLocale + "," + QLocale().bcp47Name() + ",en-US,en").replace('_', '-');
 
-    CefString(&cefSettings.locale).FromString(qtcStr(QLocale().name()));
-    CefString(&cefSettings.accept_language_list).FromString(qtcStr(languageList));
+    // CefString(&cefSettings.locale).FromString(qtcStr(QLocale().name()));
+    // CefString(&cefSettings.accept_language_list).FromString(qtcStr(languageList));
 
 #if !defined(CEF_USE_SANDBOX)
     cefSettings.no_sandbox = true;

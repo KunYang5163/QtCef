@@ -12,6 +12,10 @@
 #include <QString>
 #include <QWidget>
 #include <string>
+#include <QTimer>
+#include <QMouseEvent>
+#include <QApplication>
+#include <QTest>
 
 namespace {
 
@@ -33,6 +37,14 @@ static RECT qRectToRECT(const QRect& rect)
     r.left = rect.left();
     r.right = rect.right();
     return r;
+}
+
+static inline int MiddleX(const CefRect& rect) {
+    return rect.x + rect.width / 2;
+}
+
+static inline int MiddleY(const CefRect& rect) {
+    return rect.y + rect.height / 2;
 }
 
 }  // namespace
@@ -122,6 +134,109 @@ void QtCefHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame
     frame->LoadURL(GetDataURI(ss.str(), "text/html"));
 }
 
+void QtCefHandler::login(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame)
+{
+    // browser.find_element(By.XPATH,'//*[@id="app"]/div/div/div/section/form/div[1]/div/div/input').send_keys(username)
+    // browser.find_element(By.XPATH,'//*[@id="app"]/div/div/div/section/form/div[2]/div/div/input').send_keys(passwd)
+    // browser.find_element(By.XPATH,'//*[@id="app"]/div/div/div/section/section/button').click()
+}
+
+void QtCefHandler::checkUrl(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,const CefString &url)
+{
+    qDebug() << "check url: "  << url.ToWString();
+    if (url.ToString().find("lhqkl.ydmap.cn/user/login") != std::string::npos)
+    {
+        // CefString js = "";
+                       // (function() {
+                       // browser.find_element(By.XPATH,'//*[@id=\"app\"]/div/div/div/section/form/div[1]/div/div/input').send_keys("15118025057")
+                       // browser.find_element(By.XPATH,'//*[@id=\"app\"]/div/div/div/section/form/div[2]/div/div/input').send_keys("topten10")
+                       // browser.find_element(By.XPATH,'//*[@id=\"app\"]/div/div/div/section/section/button').click()
+                       // })()
+                       // ";
+        // browser->GetMainFrame()->ExecuteJavaScript(js, nullptr, 0);
+        CefRefPtr<CefFrame> frame = browser->GetMainFrame();
+        // frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');",
+                                 // frame->GetURL(), 0);
+        // frame->ExecuteJavaScript(""
+        //                " var username = getElementByXpath(By.XPATH,'//*[@id=\"app\"]/div/div/div/section/form/div[1]/div/div/input');"
+        //                " username.send_keys(\"15118025057\");"
+        //                " var pwd = getElementByXpath(By.XPATH,'//*[@id=\"app\"]/div/div/div/section/form/div[2]/div/div/input');"
+        //                " pwd.send_keys(\"topten10\");"
+        //                " var login = getElementByXpath(By.XPATH,'//*[@id=\"app\"]/div/div/div/section/section/button');"
+        //                " login.click();"
+        //                          "",
+        //                          frame->GetURL(), 0);
+
+        // browser->GetHost()->Find(0, "请输入您的手机号", true, true, false);
+    }
+    // if (checkUrl.currentUrl === 'https://lhqkl.ydmap.cn/booking/schedule/103909?salesItemId=102914')
+    // {
+    //     selectCourt();
+    // }
+    // else if (checkUrl.currentUrl.includes('contact-collect'))
+    // {
+    //     confirmMember();
+    // }
+    // else if (checkUrl.currentUrl.includes('dataKey='))
+    // {
+    //     confirmCourt();
+    // }
+}
+
+void QtCefHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
+                                   CefRefPtr<CefFrame> frame,
+                                   const CefString& url)
+{
+    qDebug() << "address change: " << url.ToString();
+}
+
+void QtCefHandler::OnFindResult(CefRefPtr<CefBrowser> browser,
+                          int identifier,
+                          int count,
+                          const CefRect& selectionRect,
+                          int activeMatchOrdinal,
+                          bool finalUpdate)
+{
+    if (count == 0)
+    {
+        return ;
+    }
+    qDebug() << "Find count: " << count;
+    // QRect selected = QRect(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height);
+    // qDebug() << "select rect: " << selected;
+    qDebug() << "click point: " << MiddleX(selectionRect) << ", " << MiddleY(selectionRect);
+
+    if (selectionRect.width == 0 || selectionRect.height == 0)
+    {
+        return ;
+    }
+    CefMouseEvent event;
+    event.x = MiddleX(selectionRect);
+    event.y = MiddleY(selectionRect);
+    qDebug() << "event point: " << event.x << "," << event.y;
+    // browser->GetHost()->SendMouseMoveEvent(event, true);
+    browser->GetHost()->SendMouseMoveEvent(event, true);
+    browser->GetHost()->SendMouseClickEvent(event, MBT_LEFT, true, 1);
+
+    // QWidget *d = qApp->activeWindow();
+    // QTest::mouseClick(d, Qt::LeftButton, Qt::NoModifier, selected.center());
+
+    // QCursor::setPos(selected.center());
+    // qDebug()<<QCursor::pos();
+    // QWidget *d = qApp->activeWindow();
+    // QMouseEvent MouseEvent(QEvent::MouseButtonPress, QCursor::pos(),Qt::LeftButton,Qt::LeftButton, Qt::NoModifier);
+    // QApplication::sendEvent(d, &MouseEvent);
+}
+
+void QtCefHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                       CefRefPtr<CefFrame> frame,
+                       int httpStatusCode)
+{
+    auto url =  browser->GetMainFrame()->GetURL();
+    qDebug() << "OnLoadEnd: " << url.ToWString();
+    checkUrl(browser, frame, url);
+}
+
 CefResponseFilter::FilterStatus ResponseDataInterceptor::Filter(void *data_in, size_t data_in_size, size_t &data_in_read, void *data_out, size_t data_out_size, size_t &data_out_written)
 {
     CEF_REQUIRE_IO_THREAD();
@@ -181,6 +296,8 @@ void QtCefHandler::OnResourceLoadComplete(CefRefPtr<CefBrowser> browser, CefRefP
     {
         _cefApp->OnDataReceived(_interceptor->GetInterceptedData());
     }
+    qDebug() << __func__;
+    browser->GetHost()->Find(0, "请输入您的手机号", true, true, false);
 }
 
 void QtCefHandler::CloseAllBrowsers(bool force_close) {

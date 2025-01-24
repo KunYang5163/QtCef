@@ -83,12 +83,16 @@ private:
     IMPLEMENT_REFCOUNTING(ResponseDataInterceptor);
 };
 
-class QtCefHandler: public CefClient,
+class QtCefHandler: public QObject,
+                    public CefClient,
                     public CefDisplayHandler,
                     public CefLifeSpanHandler,
                     public CefLoadHandler,
                     public CefRequestHandler,
-                    public CefResourceRequestHandler {
+                    public CefResourceRequestHandler,
+                    public CefFindHandler
+{
+    Q_OBJECT
 public:
     explicit QtCefHandler(CefRefPtr<QtCefApp> cefApp);
     ~QtCefHandler();
@@ -163,6 +167,21 @@ public:
     {
         _interceptor->ReInit(0);
     }
+
+    virtual CefRefPtr<CefFindHandler> GetFindHandler() { return this; }
+
+    virtual void OnFindResult(CefRefPtr<CefBrowser> browser,
+                              int identifier,
+                              int count,
+                              const CefRect& selectionRect,
+                              int activeMatchOrdinal,
+                              bool finalUpdate) OVERRIDE;
+
+protected:
+    virtual void OnAddressChange(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& url) OVERRIDE;
+    virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int httpStatusCode) OVERRIDE;
+    void checkUrl(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,const CefString &url);
+    void login(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame);
 
 private:
     CefRefPtr<QtCefApp> _cefApp;

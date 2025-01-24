@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->cefWidget->load(QUrl("https://www.youtube.com/"));
+    ui->cefWidget->load(QUrl("https://lhqkl.ydmap.cn/user/login"));
 }
 
 MainWindow::~MainWindow()
